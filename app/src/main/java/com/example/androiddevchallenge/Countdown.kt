@@ -1,5 +1,9 @@
 package com.example.androiddevchallenge
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material.Card
@@ -10,23 +14,50 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun CountDown(hours: Int, minutes: Int, seconds: Int) {
-    Row {
-        CountDownUnit(
-            time = hours,
-            unit = "hours",
-        )
-        CountdownDivider()
-        CountDownUnit(
-            time = minutes,
-            unit = "minutes",
-        )
-        CountdownDivider()
-        CountDownUnit(
-            time = seconds,
-            unit = "seconds",
-        )
+fun CountDown(modifier: Modifier = Modifier, hours: Int, minutes: Int, seconds: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+
+        val showHours = hours > 0
+        AnimatedVisibility(showHours) {
+            CountDownUnit(
+                time = hours,
+                unit = "hours",
+            )
+        }
+        AnimatedVisibility(showHours) {
+            CountdownDivider()
+        }
+
+        val showMinutes = showHours || minutes > 0
+        AnimatedVisibility(showMinutes) {
+            CountDownUnit(
+                time = minutes,
+                unit = "minutes",
+            )
+        }
+        AnimatedVisibility(showMinutes) {
+            CountdownDivider()
+        }
+
+        val completed = showMinutes || seconds > 0
+        AnimatedVisibility(visible = completed) {
+            CountDownUnit(
+                time = seconds,
+                unit = "seconds",
+            )
+        }
+        AnimatedVisibility(visible = !completed) {
+            Text(
+                text = "Finished",
+                style = MaterialTheme.typography.h3
+            )
+
+        }
     }
 }
 
@@ -57,15 +88,17 @@ fun CountDownUnit(time: Int, unit: String) {
 
 @Composable
 fun CountDownDigit(digit: Int) {
-    Card(
-        shape = CutCornerShape(4.dp)
-    )
-    {
-        Text(
-            modifier = Modifier.padding(16.dp),
-            text = "$digit",
-            style = MaterialTheme.typography.h4,
+    Crossfade(targetState = digit, animationSpec = spring()) { digit ->
+        Card(
+            shape = CutCornerShape(4.dp)
         )
+        {
+            Text(
+                modifier = Modifier.padding(16.dp),
+                text = "$digit",
+                style = MaterialTheme.typography.h4,
+            )
+        }
     }
 }
 

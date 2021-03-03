@@ -5,35 +5,43 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ticker
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 class CountdownViewModel: ViewModel() {
+    @OptIn(ObsoleteCoroutinesApi::class)
     private val tickerChannel = ticker(500L, 0L, Dispatchers.IO)
 
     val seconds = MutableLiveData(0)
+    val minutes = MutableLiveData(0)
 
     private val aim: Date = Calendar.getInstance().apply {
-        add(Calendar.SECOND, 55)
+        add(Calendar.MINUTE, 1)
+        add(Calendar.SECOND, 5)
     }.time
 
-    val currentTime = tickerChannel.consumeAsFlow()
-        .transform {
-            emit(Date())
-        }
-        .onEach {
-            val difference = aim.time - it.time
+    init {
 
-            seconds.postValue(
-                TimeUnit.SECONDS.convert(difference, TimeUnit.MILLISECONDS).toInt()
-            )
+        tickerChannel.consumeAsFlow()
+            .transform {
+                emit(Date())
+            }
+            .onEach {
+                val difference = aim.time - it.time
 
-            Log.d("DateTime", "${it}")
-        }
-        .launchIn(viewModelScope)
+                minutes.postValue(
+                    TimeUnit.MINUTES.convert(difference, TimeUnit.MILLISECONDS).toInt() % 60
+                )
+                seconds.postValue(
+                    TimeUnit.SECONDS.convert(difference, TimeUnit.MILLISECONDS).toInt() % 60
+                )
+
+                Log.d("DateTime", "${it}")
+            }
+            .flowOn(Dispatchers.IO)
+            .launchIn(viewModelScope)
+    }
 }

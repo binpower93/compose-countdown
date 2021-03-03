@@ -44,7 +44,14 @@ fun MyApp(countdownViewModel: CountdownViewModel = viewModel()) {
 
     Surface(color = MaterialTheme.colors.background) {
         val seconds by countdownViewModel.seconds.observeAsState(0)
-        CountDown(hours = 15, minutes = 45, seconds = seconds)
+        val minutes by countdownViewModel.minutes.observeAsState(0)
+
+        CountDown(
+//            modifier = Modifier.fillMaxWidth(),
+            hours = 0,
+            minutes = minutes,
+            seconds = seconds,
+        )
     }
 }
 
