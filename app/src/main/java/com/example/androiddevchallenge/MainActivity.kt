@@ -41,7 +41,8 @@ class MainActivity : AppCompatActivity() {
 
 // Start building your app here!
 @Composable
-fun MyApp() {
+fun MyApp(countdownViewModel: CountdownViewModel = viewModel()) {
+
     Surface(color = MaterialTheme.colors.background) {
         CountDown(hours = 15, minutes = 45, seconds = 10)
     }
