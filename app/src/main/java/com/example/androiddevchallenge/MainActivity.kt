@@ -43,14 +43,22 @@ class MainActivity : AppCompatActivity() {
 fun MyApp(countdownViewModel: CountdownViewModel = viewModel()) {
 
     Surface(color = MaterialTheme.colors.background) {
+        val hours by countdownViewModel.hours.observeAsState(0)
         val seconds by countdownViewModel.seconds.observeAsState(0)
         val minutes by countdownViewModel.minutes.observeAsState(0)
+        val progress by countdownViewModel.progress.observeAsState(0f)
+        val editing by countdownViewModel.editing.observeAsState(true)
 
         CountDown(
 //            modifier = Modifier.fillMaxWidth(),
-            hours = 0,
+            hours = hours,
             minutes = minutes,
             seconds = seconds,
+            progress = progress,
+            modifyHours = countdownViewModel::modifyHours,
+            modifyMins = countdownViewModel::modifyMins,
+            modifySecs = countdownViewModel::modifySecs,
+            isEditing = editing,
         )
     }
 }

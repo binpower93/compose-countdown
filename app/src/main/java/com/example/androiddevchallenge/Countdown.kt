@@ -1,62 +1,113 @@
 package com.example.androiddevchallenge
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun CountDown(modifier: Modifier = Modifier, hours: Int, minutes: Int, seconds: Int) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+fun CountDown(
+    modifier: Modifier = Modifier,
+    hours: Int,
+    minutes: Int,
+    seconds: Int,
+    progress: Float = 1.0f,
+    isEditing: Boolean = true,
+    modifyHours: (Long) -> Unit = { },
+    modifyMins: (Long) -> Unit = { },
+    modifySecs: (Long) -> Unit = { },
+) {
+
+    Log.d("Progress", "$progress")
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
 
-        val showHours = hours > 0
-        AnimatedVisibility(showHours) {
-            CountDownUnit(
-                time = hours,
-                unit = "hours",
+            val showHours = hours > 0 || isEditing
+            AnimatedVisibility(showHours) {
+                EditableCountDownUnit(
+                    isEditing = isEditing,
+                    modify = modifyHours,
+                    value = hours,
+                )
+            }
+            AnimatedVisibility(showHours) {
+                CountdownDivider()
+            }
+
+            val showMinutes = showHours || minutes > 0
+            AnimatedVisibility(showMinutes) {
+                EditableCountDownUnit(
+                    isEditing,
+                    modifyMins,
+                    minutes,
+                )
+            }
+            AnimatedVisibility(showMinutes) {
+                CountdownDivider()
+            }
+
+            val completed = showMinutes || seconds > 0
+            AnimatedVisibility(visible = completed) {
+                EditableCountDownUnit(
+                    isEditing = isEditing,
+                    modify = modifySecs,
+                    value = seconds,
+                )
+            }
+            AnimatedVisibility(visible = !completed) {
+                Text(
+                    text = "Finished",
+                    style = MaterialTheme.typography.h3
+                )
+
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun EditableCountDownUnit(
+    isEditing: Boolean = true,
+    modify: (Long) -> Unit,
+    value: Int,
+) {
+    Column {
+        AnimatedVisibility(visible = isEditing) {
+            CountDownIncreaseButton(
+                onClick = {
+                    modify(1)
+                },
             )
         }
-        AnimatedVisibility(showHours) {
-            CountdownDivider()
-        }
-
-        val showMinutes = showHours || minutes > 0
-        AnimatedVisibility(showMinutes) {
-            CountDownUnit(
-                time = minutes,
-                unit = "minutes",
+        CountDownUnit(
+            time = value,
+        )
+        AnimatedVisibility(visible = isEditing) {
+            CountDownDecreaseButton(
+                onClick = {
+                    modify(-1)
+                },
+                enabled = value > 0
             )
-        }
-        AnimatedVisibility(showMinutes) {
-            CountdownDivider()
-        }
-
-        val completed = showMinutes || seconds > 0
-        AnimatedVisibility(visible = completed) {
-            CountDownUnit(
-                time = seconds,
-                unit = "seconds",
-            )
-        }
-        AnimatedVisibility(visible = !completed) {
-            Text(
-                text = "Finished",
-                style = MaterialTheme.typography.h3
-            )
-
         }
     }
 }
@@ -71,34 +122,46 @@ private fun CountdownDivider() {
 }
 
 @Composable
-fun CountDownUnit(time: Int, unit: String) {
+fun CountDownUnit(time: Int) {
     Column {
         Row {
             CountDownDigit(digit = time / 10)
             Spacer(modifier = Modifier.width(8.dp))
             CountDownDigit(digit = time % 10)
         }
+    }
+}
 
+
+@Composable
+fun CountDownDigit(digit: Int) {
+    Card(
+        shape = CutCornerShape(4.dp)
+    ) {
         Text(
-            text = unit,
-            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(16.dp),
+            text = "$digit",
+            style = MaterialTheme.typography.h4,
         )
     }
 }
 
 @Composable
-fun CountDownDigit(digit: Int) {
-    Crossfade(targetState = digit, animationSpec = spring()) { digit ->
-        Card(
-            shape = CutCornerShape(4.dp)
-        )
-        {
-            Text(
-                modifier = Modifier.padding(16.dp),
-                text = "$digit",
-                style = MaterialTheme.typography.h4,
-            )
-        }
+fun CountDownIncreaseButton(
+    onClick: () -> Unit,
+) {
+    Button(onClick = onClick) {
+        Text(text = "+")
+    }
+}
+
+@Composable
+fun CountDownDecreaseButton(
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    Button(onClick = onClick, enabled = enabled) {
+        Text(text = "-")
     }
 }
 
@@ -118,7 +181,6 @@ fun CountdownPreview() {
 fun CountdownUnitPreview() {
     CountDownUnit(
         time = 15,
-        unit = "Mins",
     )
 }
 
