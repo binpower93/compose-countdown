@@ -1,6 +1,5 @@
 package com.example.androiddevchallenge
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +9,7 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 import kotlin.math.min
 
 class CountdownViewModel: ViewModel() {
@@ -49,13 +49,19 @@ class CountdownViewModel: ViewModel() {
                 val aim = aim ?: return@onEach
                 val currentDifference = aim.time - it.time
 
-                Log.d("Diff", "$currentDifference")
+                if(currentDifference < 0) {
+                    hours.postValue(0)
+                    minutes.postValue(0)
+                    seconds.postValue(0)
+                    progress.postValue(1f)
+                    return@onEach
+                }
+
                 val currentProgress = ((this.difference - currentDifference.toFloat()) / this.difference.toFloat())
-                Log.d("Diff", "$currentProgress")
                 progress.postValue(min(currentProgress, 1f))
 
                 hours.postValue(
-                    TimeUnit.HOURS.convert(difference, TimeUnit.MILLISECONDS).toInt()
+                    TimeUnit.HOURS.convert(currentDifference, TimeUnit.MILLISECONDS).toInt()
                 )
                 minutes.postValue(
                     TimeUnit.MINUTES.convert(currentDifference, TimeUnit.MILLISECONDS).toInt() % 60
@@ -63,8 +69,6 @@ class CountdownViewModel: ViewModel() {
                 seconds.postValue(
                     TimeUnit.SECONDS.convert(currentDifference, TimeUnit.MILLISECONDS).toInt() % 60
                 )
-
-                Log.d("DateTime", "${it}")
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
@@ -83,7 +87,6 @@ class CountdownViewModel: ViewModel() {
     }
 
     fun start() {
-        Log.d("Start", "$difference")
         aim = Calendar.getInstance().apply {
             add(Calendar.MILLISECOND, difference.toInt())
         }.time
@@ -91,8 +94,9 @@ class CountdownViewModel: ViewModel() {
     }
 
     fun stop() {
-        difference = (aim ?: Date()).time - Date().time
+        difference = max(0, (aim ?: Date()).time - Date().time)
         aim = null
+        progress.value = 0f
         editing.value = true
     }
 }

@@ -5,13 +5,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -35,7 +33,17 @@ fun CountDown(
 
     Column(
         modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
+
+        AnimatedVisibility(visible = !isEditing) {
+            CircularProgressIndicator(
+                modifier = Modifier.padding(64.dp).fillMaxWidth().aspectRatio(1f),
+                progress = progress,
+            )
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -54,7 +62,7 @@ fun CountDown(
                 CountdownDivider()
             }
 
-            val showMinutes = showHours || minutes > 0
+            val showMinutes = showHours || minutes > 0 || isEditing
             AnimatedVisibility(showMinutes) {
                 EditableCountDownUnit(
                     isEditing,
@@ -66,31 +74,53 @@ fun CountDown(
                 CountdownDivider()
             }
 
-            val completed = showMinutes || seconds > 0
-            AnimatedVisibility(visible = completed) {
+            val inProgress = progress < 1
+            AnimatedVisibility(visible = inProgress) {
                 EditableCountDownUnit(
                     isEditing = isEditing,
                     modify = modifySecs,
                     value = seconds,
                 )
             }
-            AnimatedVisibility(visible = !completed) {
+            AnimatedVisibility(visible = !inProgress) {
                 Text(
                     text = "Finished",
-                    style = MaterialTheme.typography.h3
+                    style = MaterialTheme.typography.h3,
+                    textAlign = TextAlign.Center,
                 )
 
             }
         }
-
         AnimatedVisibility(visible = isEditing) {
-            Button(onClick = { start() }) {
+            Button(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 16.dp),
+                onClick = { start() },
+                enabled = seconds > 0 || minutes > 0 || hours > 0,
+            ) {
                 Text(text = "Start")
             }
         }
-        AnimatedVisibility(visible = !isEditing) {
-            Button(onClick = { stop() }) {
+        val isNotFinished = hours > 0 && minutes > 0 && seconds > 0
+        AnimatedVisibility(visible = !isEditing && isNotFinished) {
+            Button(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .align(Alignment.CenterHorizontally),
+                onClick = { stop() },
+            ) {
                 Text(text = "Stop")
+            }
+        }
+        AnimatedVisibility(visible = !isEditing && !isNotFinished) {
+            Button(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .align(Alignment.CenterHorizontally),
+                onClick = { stop() },
+            ) {
+                Text(text = "Reset")
             }
         }
     }
@@ -103,7 +133,9 @@ private fun EditableCountDownUnit(
     modify: (Long) -> Unit,
     value: Int,
 ) {
-    Column {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         AnimatedVisibility(visible = isEditing) {
             CountDownIncreaseButton(
                 onClick = {
@@ -112,6 +144,7 @@ private fun EditableCountDownUnit(
             )
         }
         CountDownUnit(
+            modifier = Modifier.padding(vertical = 8.dp),
             time = value,
         )
         AnimatedVisibility(visible = isEditing) {
@@ -135,13 +168,11 @@ private fun CountdownDivider() {
 }
 
 @Composable
-fun CountDownUnit(time: Int) {
-    Column {
-        Row {
-            CountDownDigit(digit = time / 10)
-            Spacer(modifier = Modifier.width(8.dp))
-            CountDownDigit(digit = time % 10)
-        }
+fun CountDownUnit(modifier: Modifier = Modifier, time: Int) {
+    Row(modifier = modifier) {
+        CountDownDigit(digit = time / 10)
+        Spacer(modifier = Modifier.width(8.dp))
+        CountDownDigit(digit = time % 10)
     }
 }
 
