@@ -26,16 +26,12 @@ class CountdownViewModel: ViewModel() {
     private var aim: Date? = Date()
 
     init {
-        modifySecs(30)
-//        start()
 
         tickerChannel.consumeAsFlow()
             .transform {
                 emit(Date())
             }
             .onEach {
-                val aim = aim ?: return@onEach
-
                 if(editing.value == true) {
                     hours.postValue(
                         TimeUnit.HOURS.convert(difference, TimeUnit.MILLISECONDS).toInt()
@@ -50,6 +46,7 @@ class CountdownViewModel: ViewModel() {
                     return@onEach
                 }
 
+                val aim = aim ?: return@onEach
                 val currentDifference = aim.time - it.time
 
                 Log.d("Diff", "$currentDifference")
@@ -91,5 +88,11 @@ class CountdownViewModel: ViewModel() {
             add(Calendar.MILLISECOND, difference.toInt())
         }.time
         editing.value = false
+    }
+
+    fun stop() {
+        difference = (aim ?: Date()).time - Date().time
+        aim = null
+        editing.value = true
     }
 }

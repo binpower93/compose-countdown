@@ -59,6 +59,8 @@ fun MyApp(countdownViewModel: CountdownViewModel = viewModel()) {
             modifyMins = countdownViewModel::modifyMins,
             modifySecs = countdownViewModel::modifySecs,
             isEditing = editing,
+            start = countdownViewModel::start,
+            stop = countdownViewModel::stop
         )
     }
 }

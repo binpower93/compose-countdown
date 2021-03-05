@@ -27,6 +27,8 @@ fun CountDown(
     modifyHours: (Long) -> Unit = { },
     modifyMins: (Long) -> Unit = { },
     modifySecs: (Long) -> Unit = { },
+    start: () -> Unit = { },
+    stop: () -> Unit = { },
 ) {
 
     Log.d("Progress", "$progress")
@@ -78,6 +80,17 @@ fun CountDown(
                     style = MaterialTheme.typography.h3
                 )
 
+            }
+        }
+
+        AnimatedVisibility(visible = isEditing) {
+            Button(onClick = { start() }) {
+                Text(text = "Start")
+            }
+        }
+        AnimatedVisibility(visible = !isEditing) {
+            Button(onClick = { stop() }) {
+                Text(text = "Stop")
             }
         }
     }
